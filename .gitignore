@@ -1,0 +1,30 @@
+# Virtual Environments
+venv/
+env/
+ENV/
+.env
+
+# Python Cache & Bytecode
+__pycache__/
+*.py[cod]
+*$py.class
+*.pyc
+
+# PyTorch Model Checkpoints & Weights
+*.pth
+*.pt
+*.ckpt
+
+# Datasets & Downloads
+DATASET/
+.cache/
+*.tar.gz
+*.zip
+
+# Logs
+*.log
+
+# IDE & OS Files
+.DS_Store
+.vscode/
+.idea/
