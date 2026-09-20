@@ -12,6 +12,7 @@ Facial-Expresssion-Recognition/
 ├── model.py          # Phase 3: Custom 4-block CNN (7x7x512 feature map + 1-layer classifier)
 ├── train.py          # Phase 4: Training, validation loops, and Early Stopping
 ├── evaluate.py       # Phase 6: Precision, Recall, F1-Score & Confusion Matrix evaluation
+├── explain.py        # Phase 7: Explainable AI (Grad-CAM) visualization
 ├── main.py           # Entry point: CLI argument parsing and pipeline orchestration
 ├── requirements.txt  # Project dependencies
 └── README.md         # Instructions and documentation
@@ -95,3 +96,17 @@ This displays:
 * **Feature Map Output**: Exactly **`[Batch, 512, 7, 7]`**
 * **Classifier**: 1 Linear Layer: `nn.Linear(512 * 7 * 7, 7)` (25,088 $\to$ 7 emotion classes)
 * **Early Stopping & Smart Checkpointing**: Halts training if validation loss stops improving for 5 consecutive epochs. Saves the best weights with a hyperparameter-specific filename (e.g., `best_model_epochs30_bs64_lr0.001_dropout0.25_adam.pth`) so previous experiments are never overwritten.
+
+---
+
+## 🔍 Explainable AI (Grad-CAM)
+
+Visualize which facial regions (eyes, mouth, eyebrows) the model used to make its prediction:
+
+```bash
+python explain.py --image path/to/face.jpg --model best_model_epochs30_bs64_lr0.001_dropout0.25_adam.pth
+```
+
+* **Target Layer**: `model.block4.conv2` (last convolutional layer).
+* **Output**: Generates a heatmap overlay saved to `gradcam_result.png` (or custom `--output`).
+* **Console Summary**: Displays the predicted emotion and confidence score.
