@@ -78,4 +78,4 @@ python main.py --epochs 40 --batch_size 32 --lr 0.0003 --dropout 0.3 --optimizer
   * Each block: 2 × `Conv2d` (3x3), 1 × `BatchNorm2d`, 1 × `ReLU`, 1 × `Dropout2d`, 1 × `MaxPool2d` (2x2)
 * **Feature Map Output**: Exactly **`[Batch, 512, 7, 7]`**
 * **Classifier**: 1 Linear Layer: `nn.Linear(512 * 7 * 7, 7)` (25,088 $\to$ 7 emotion classes)
-* **Early Stopping**: Halts training if validation loss stops improving for 5 consecutive epochs, saving `best_model.pth`.
+* **Early Stopping & Smart Checkpointing**: Halts training if validation loss stops improving for 5 consecutive epochs. Saves the best weights with a hyperparameter-specific filename (e.g., `best_model_epochs30_bs64_lr0.001_dropout0.25_adam.pth`) so previous experiments are never overwritten.

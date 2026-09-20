@@ -120,7 +120,8 @@ def main():
         raise ValueError(f"Unknown optimizer: {args.optimizer}")
 
     # 7. Phase 4: Train model with early stopping
-    best_model_path = "best_model.pth"
+    # Dynamically name checkpoint with hyperparameters so each experiment has its own file
+    best_model_path = f"best_model_epochs{args.epochs}_bs{args.batch_size}_lr{args.lr}_dropout{args.dropout}_{args.optimizer.lower()}.pth"
     model, history = train_model(
         model=model,
         train_loader=train_loader,
