@@ -12,18 +12,30 @@ Facial-Expresssion-Recognition/
 ├── model.py          # Phase 3: Custom 4-block CNN (7x7x512 feature map + 1-layer classifier)
 ├── train.py          # Phase 4: Training, validation loops, and Early Stopping
 ├── main.py           # Entry point: CLI argument parsing and pipeline orchestration
+├── requirements.txt  # Project dependencies
 └── README.md         # Instructions and documentation
 ```
 
 ---
 
-## ⚙️ Setup & Activation
+## ⚙️ Installation & Setup
 
-Activate the virtual environment in your terminal:
+1. **Clone the repository:**
+   ```bash
+   git clone https://github.com/Nilkamal21/Facial-Expresssion-Recognition.git
+   cd Facial-Expresssion-Recognition
+   ```
 
-```bash
-source /workspaces/Facial-Expresssion-Recognition/venv/bin/activate
-```
+2. **(Optional) Create and activate a virtual environment:**
+   ```bash
+   python -m venv venv
+   source venv/bin/activate  # On Windows: venv\Scripts\activate
+   ```
+
+3. **Install dependencies:**
+   ```bash
+   pip install -r requirements.txt
+   ```
 
 ---
 
