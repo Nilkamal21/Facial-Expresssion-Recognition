@@ -11,6 +11,7 @@ Facial-Expresssion-Recognition/
 ├── dataset.py        # Phase 1 & 2: Data loading (kagglehub), preprocessing, and augmentations
 ├── model.py          # Phase 3: Custom 4-block CNN (7x7x512 feature map + 1-layer classifier)
 ├── train.py          # Phase 4: Training, validation loops, and Early Stopping
+├── evaluate.py       # Phase 6: Precision, Recall, F1-Score & Confusion Matrix evaluation
 ├── main.py           # Entry point: CLI argument parsing and pipeline orchestration
 ├── requirements.txt  # Project dependencies
 └── README.md         # Instructions and documentation
@@ -68,6 +69,21 @@ python main.py --batch_size 32 --optimizer sgd
 ```bash
 python main.py --epochs 40 --batch_size 32 --lr 0.0003 --dropout 0.3 --optimizer adam
 ```
+
+---
+
+## 📊 Standalone Model Evaluation
+
+You can evaluate any previously trained checkpoint on the RAF-DB test set without retraining:
+
+```bash
+python evaluate.py --model best_model_epochs30_bs64_lr0.001_dropout0.25_adam.pth
+```
+
+This displays:
+* **Per-Class Metrics**: Precision, Recall, F1-Score, and Support for each of the 7 emotions.
+* **Confusion Matrix**: Full $7 \times 7$ grid showing exact correct vs confused predictions.
+* **Key Insights**: Best-performing emotion, most challenging emotion, and top confusion pair.
 
 ---
 

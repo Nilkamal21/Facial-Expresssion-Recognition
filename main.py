@@ -16,6 +16,7 @@ import torch.nn as nn
 from dataset import get_data_loaders
 from model import CustomCNN
 from train import train_model
+from evaluate import evaluate_model, compute_and_print_report
 
 
 def parse_arguments():
@@ -135,6 +136,11 @@ def main():
 
     print("\n[✓] Training complete!")
     print(f"[✓] Best model saved as '{best_model_path}'")
+
+    # 8. Phase 6: Final Evaluation & Metrics Reporting
+    print("\n[+] Generating Full Evaluation Report on RAF-DB Test Set...")
+    y_true, y_pred = evaluate_model(model, test_loader, device)
+    compute_and_print_report(y_true, y_pred)
 
 
 if __name__ == "__main__":
