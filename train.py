@@ -57,9 +57,12 @@ class EarlyStopping:
         print(f"  --> Validation loss improved to {val_loss:.4f}. Checkpoint saved to '{self.save_path}'.")
 
 
+from tqdm import tqdm
+
+
 def train_one_epoch(model, dataloader, criterion, optimizer, device):
     """
-    Runs one training epoch.
+    Runs one training epoch with a live progress bar.
     
     Parameters:
         model: PyTorch neural network model.
@@ -78,7 +81,8 @@ def train_one_epoch(model, dataloader, criterion, optimizer, device):
     correct = 0
     total = 0
 
-    for images, labels in dataloader:
+    progress_bar = tqdm(dataloader, desc="  Training  ", leave=False)
+    for images, labels in progress_bar:
         images = images.to(device)
         labels = labels.to(device)
 
@@ -101,6 +105,11 @@ def train_one_epoch(model, dataloader, criterion, optimizer, device):
         correct += (predicted == labels).sum().item()
         total += labels.size(0)
 
+        # Update progress bar with current batch metrics
+        current_loss = running_loss / total
+        current_acc = 100.0 * correct / total
+        progress_bar.set_postfix({"loss": f"{current_loss:.4f}", "acc": f"{current_acc:.2f}%"})
+
     epoch_loss = running_loss / total
     epoch_acc = 100.0 * correct / total
     return epoch_loss, epoch_acc
@@ -108,7 +117,7 @@ def train_one_epoch(model, dataloader, criterion, optimizer, device):
 
 def validate(model, dataloader, criterion, device):
     """
-    Evaluates the model on the validation/test set.
+    Evaluates the model on the validation/test set with a live progress bar.
     
     Parameters:
         model: PyTorch neural network model.
@@ -126,9 +135,10 @@ def validate(model, dataloader, criterion, device):
     correct = 0
     total = 0
 
+    progress_bar = tqdm(dataloader, desc="  Validating", leave=False)
     # No gradients needed for validation (saves memory and compute)
     with torch.no_grad():
-        for images, labels in dataloader:
+        for images, labels in progress_bar:
             images = images.to(device)
             labels = labels.to(device)
 
@@ -139,6 +149,10 @@ def validate(model, dataloader, criterion, device):
             _, predicted = torch.max(outputs, dim=1)
             correct += (predicted == labels).sum().item()
             total += labels.size(0)
+
+            current_loss = running_loss / total
+            current_acc = 100.0 * correct / total
+            progress_bar.set_postfix({"loss": f"{current_loss:.4f}", "acc": f"{current_acc:.2f}%"})
 
     val_loss = running_loss / total
     val_acc = 100.0 * correct / total
