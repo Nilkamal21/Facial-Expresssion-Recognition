@@ -13,12 +13,13 @@ import argparse
 import numpy as np
 from PIL import Image
 
+import cv2
 import torch
 import torch.nn.functional as F
 from torchvision import transforms
 
 from pytorch_grad_cam import GradCAM
-from pytorch_grad_cam.utils.image import show_cam_on_image
+from pytorch_grad_cam.utils.model_targets import ClassifierOutputTarget
 
 from dataset import EMOTION_DICT
 from model import CustomCNN
@@ -51,9 +52,31 @@ def load_and_preprocess_image(image_path, img_size=112):
     return rgb_img, input_tensor
 
 
+def apply_gradcam_overlay(rgb_img, cam_mask, threshold=0.15, alpha=0.6, colormap=cv2.COLORMAP_JET):
+    """
+    Overlays Grad-CAM heatmap onto rgb_img with thresholded alpha transparency.
+    Regions with activation below threshold keep the original face's natural colors
+    instead of being washed out with solid blue.
+    """
+    # 1. Apply OpenCV colormap to CAM mask (normalized in [0, 1])
+    heatmap = cv2.applyColorMap(np.uint8(255 * cam_mask), colormap)
+    heatmap = cv2.cvtColor(heatmap, cv2.COLOR_BGR2RGB)
+    heatmap = np.float32(heatmap) / 255.0
+
+    # 2. Dynamic alpha mask: 0 below threshold, transitions smoothly to alpha
+    mask_weight = np.clip((cam_mask - threshold) / (1.0 - threshold + 1e-7), 0.0, 1.0)
+    mask_weight = np.expand_dims(mask_weight, axis=2) * alpha
+
+    # 3. Alpha blend: original face in inactive regions, heatmap in active hotspots
+    overlay = (1.0 - mask_weight) * rgb_img + mask_weight * heatmap
+    overlay = np.clip(overlay, 0.0, 1.0)
+    return np.uint8(255 * overlay)
+
+
 def explain_prediction(model, input_tensor, rgb_img, output_path="gradcam_result.png"):
     """
     Applies Grad-CAM to visualize model attention on the input image.
+    Saves a side-by-side comparison: [Original Face | Grad-CAM Overlay].
     """
     model.eval()
 
@@ -70,25 +93,32 @@ def explain_prediction(model, input_tensor, rgb_img, output_path="gradcam_result
     print("PREDICTION SUMMARY:")
     print(f"  * Predicted Emotion : {predicted_emotion.upper()}")
     print(f"  * Confidence Score  : {confidence:.2f}%")
-    print(f"  * Target Layer      : model.block4.conv2 (Last Conv Layer)")
+    print(f"  * Target Layer      : model.block4 (Output of Block 4: 7x7x512)")
     print("-" * 65)
 
-    # 2. Point to the last Conv2d layer of Block 4
-    target_layers = [model.block4.conv2]
+    # 2. Point to the completed Block 4 (post-ReLU, post-pooling 7x7x512 feature map)
+    target_layers = [model.block4]
 
     # 3. Initialize Grad-CAM
     cam = GradCAM(model=model, target_layers=target_layers)
 
-    # 4. Generate the heatmap for the input face
-    grayscale_cam = cam(input_tensor=input_tensor)
+    # 4. Generate the heatmap for the predicted emotion
+    targets = [ClassifierOutputTarget(pred_idx)]
+    grayscale_cam = cam(input_tensor=input_tensor, targets=targets)
+    cam_mask = grayscale_cam[0, :]
 
-    # 5. Overlay heatmap on the original RGB face image
-    visualization = show_cam_on_image(rgb_img, grayscale_cam[0, :], use_rgb=True)
+    # 5. Overlay heatmap with thresholded alpha mask (retaining natural skin colors)
+    overlay = apply_gradcam_overlay(rgb_img, cam_mask, threshold=0.15, alpha=0.6)
 
-    # 6. Save the visualization
-    result_img = Image.fromarray(visualization)
+    # 6. Create side-by-side comparison: [Original Face | Grad-CAM Overlay]
+    orig_uint8 = np.uint8(255 * rgb_img)
+    side_by_side = np.hstack([orig_uint8, overlay])
+
+    # 7. Save the visualization
+    result_img = Image.fromarray(side_by_side)
     result_img.save(output_path)
-    print(f"[✓] Grad-CAM heatmap saved successfully to: '{output_path}'")
+    print(f"[✓] Side-by-side Grad-CAM visualization saved to: '{output_path}'")
+    print(f"    (Left: Original Face | Right: Heatmap Overlay with Natural Skin Colors)")
     print("-" * 65)
 
 
